@@ -24,3 +24,6 @@ go.work.sum
 # log
 log/
 *.log
+
+# temp directories
+temp/
