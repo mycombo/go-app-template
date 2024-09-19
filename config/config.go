@@ -2,16 +2,11 @@ package config
 
 import (
 	"fmt"
+	"log"
+	"sync"
 
 	"github.com/spf13/viper"
 )
-
-type Config struct {
-	Name    string `mapstructure:"name"`
-	Version string `mapstructure:"version"`
-}
-
-var C Config
 
 const (
 	configName = "config"
@@ -19,20 +14,34 @@ const (
 	configPath = "."
 )
 
-func InitConfig() {
-	viper.SetConfigName(configName)
-	viper.SetConfigType(configType)
-	viper.AddConfigPath(configPath)
+var (
+	c    Config
+	once sync.Once
+)
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		message := fmt.Errorf("failed to read config file:%v", err)
-		panic(message)
-	}
+type Config struct {
+	Name    string `mapstructure:"name"`
+	Version string `mapstructure:"version"`
+}
 
-	err = viper.Unmarshal(&C)
-	if err != nil {
-		message := fmt.Errorf("failed to unmarshal config:%v", err)
-		panic(message)
-	}
+func GetConfig() *Config {
+	once.Do(func() {
+		viper.SetConfigName(configName)
+		viper.SetConfigType(configType)
+		viper.AddConfigPath(configPath)
+
+		err := viper.ReadInConfig()
+		if err != nil {
+			message := fmt.Errorf("failed to read config file:%v", err)
+			log.Fatalln(message)
+		}
+
+		err = viper.Unmarshal(&c)
+		if err != nil {
+			message := fmt.Errorf("failed to unmarshal config:%v", err)
+			log.Fatalln(message)
+		}
+	})
+
+	return &c
 }
